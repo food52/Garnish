@@ -1,0 +1,23 @@
+{
+  "name": "Garnish",
+  "version": "1.0.0",
+  "summary": "A short description of Garnish.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/Food52/Garnish",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "Mike Simons": " mike.simons@food52.com"
+  },
+  "source": {
+    "git": "https://github.com/Food52/Garnish.git",
+    "tag": "1.0.0"
+  },
+  "platforms": {
+    "ios": "9.0"
+  },
+  "source_files": "Garnish/Classes/**/*",
+  "frameworks": "UIKit"
+}
