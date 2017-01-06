@@ -1,0 +1,6 @@
+framework module Garnish {
+  umbrella header "Garnish-umbrella.h"
+
+  export *
+  module * { export * }
+}

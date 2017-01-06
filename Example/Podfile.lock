@@ -1,0 +1,16 @@
+PODS:
+  - Garnish (1.0.0)
+
+DEPENDENCIES:
+  - Garnish (from `../`)
+
+EXTERNAL SOURCES:
+  Garnish:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  Garnish: 4971626e57e2a0805e742d7b8d1ec75b88b9dab6
+
+PODFILE CHECKSUM: 02dd392bdc2188654a6b56d618663cfdbb2c371f
+
+COCOAPODS: 1.1.1
