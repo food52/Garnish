@@ -1,5 +1,5 @@
-# Garnish
-
+![Garnish][Garnish.png]
+---
 [![CI Status](http://img.shields.io/travis/Mike Simons/Garnish.svg?style=flat)](https://travis-ci.org/Mike Simons/Garnish)
 [![Version](https://img.shields.io/cocoapods/v/Garnish.svg?style=flat)](http://cocoapods.org/pods/Garnish)
 [![License](https://img.shields.io/cocoapods/l/Garnish.svg?style=flat)](http://cocoapods.org/pods/Garnish)
