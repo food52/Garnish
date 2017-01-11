@@ -1,6 +1,5 @@
 ![Garnish](https://raw.githubusercontent.com/food52/Garnish/Image/garnish.png?token=AAYT1S43QIUPudpiyj3YX6GtjeXsW-Pyks5Yft74wA%3D%3D)
 ---
-[![CI Status](http://img.shields.io/travis/Mike Simons/Garnish.svg?style=flat)](https://travis-ci.org/Mike Simons/Garnish)
 [![Version](https://img.shields.io/cocoapods/v/Garnish.svg?style=flat)](http://cocoapods.org/pods/Garnish)
 [![License](https://img.shields.io/cocoapods/l/Garnish.svg?style=flat)](http://cocoapods.org/pods/Garnish)
 [![Platform](https://img.shields.io/cocoapods/p/Garnish.svg?style=flat)](http://cocoapods.org/pods/Garnish)
