@@ -151,7 +151,7 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
             
             let colorSpring = CASpringAnimation()
             colorSpring.keyPath = "backgroundColor"
-            colorSpring.fromValue = textColor?.cgColor ?? UIColor.black.cgColor
+            colorSpring.fromValue = textColor?.withAlphaComponent(1.0).cgColor ?? UIColor.black.cgColor
             colorSpring.toValue = layer.foregroundColor
             colorSpring.initialVelocity = 10
             colorSpring.stiffness = 500
@@ -346,7 +346,6 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
         
         let textStorage =  GarnishTextStorage()
         
-//        textStorage.font = font ??
         textStorage.textColor = textColor ?? .black
         
         textStorage.addLayoutManager(layoutManager)

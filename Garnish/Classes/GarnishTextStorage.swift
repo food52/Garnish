@@ -131,8 +131,8 @@ final public class GarnishTextStorage : NSTextStorage {
                     let item = GarnishItem(detector.attachmentType, animatable: detector.animates, highlightColor: detector.highlightColor, font: detector.highlightFont)
                     store.addAttribute(GarnishAttributeKey, value: item, range: detectedRange)
                     
-
-                    store.addAttribute(NSForegroundColorAttributeName, value: UIColor.clear, range: detectedRange)
+                    let maskColor = textColor?.withAlphaComponent(0.0) ?? UIColor.clear
+                    store.addAttribute(NSForegroundColorAttributeName, value: maskColor, range: detectedRange)
                     
                     previouslyDetectedIndexes.insert(integersIn: indexRange)
                 }
