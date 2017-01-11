@@ -23,7 +23,7 @@ public struct GarnishType: RawRepresentable {
 
 public protocol GarnishDetector {
     var highlightColor: UIColor {get}
-    var highlightFont: UIFont {get}
+    var highlightFont: UIFont? {get}
     var attachmentType: GarnishType {get}
     var animates: Bool {get}
     func detect(in string: NSString) -> [NSRange]
@@ -35,22 +35,33 @@ private let GarnishAttributeKey = "GarnishAttributeKey"
 private class GarnishItem: NSObject, NSCoding {
     let type: GarnishType
     let animatable: Bool
+    let highlightColor: UIColor
+    let font: UIFont?
 
-    init(_ type: GarnishType, animatable: Bool) {
+    init(_ type: GarnishType, animatable: Bool, highlightColor: UIColor, font: UIFont?) {
         self.type = type
         self.animatable = animatable
+        self.highlightColor = highlightColor
+        self.font = font
     }
     
     required init?(coder aDecoder: NSCoder) {
-          guard let typeString = aDecoder.decodeObject(forKey: "type") as? String else { return nil }
-
+        guard let typeString = aDecoder.decodeObject(forKey: "type") as? String,
+            let color = aDecoder.decodeObject(forKey: "highlightColor") as? UIColor else { return nil }
+        
         self.animatable =  aDecoder.decodeBool(forKey: "animatable")
         self.type = GarnishType(rawValue: typeString)
+        
+        self.highlightColor = color
+        self.font = aDecoder.decodeObject(forKey: "font") as? UIFont
+        
     }
     
     func encode(with aCoder: NSCoder) {
         aCoder.encode(animatable, forKey: "animatable")
         aCoder.encode(type.rawValue, forKey: "type")
+        aCoder.encode(font, forKey: "font")
+        aCoder.encode(highlightColor, forKey: "highlightColor")
     }
 }
 
@@ -61,24 +72,14 @@ final public class GarnishTextStorage : NSTextStorage {
     
     fileprivate let store: NSMutableAttributedString = NSMutableAttributedString()
     
-    private let defaultAttributes: [String:Any]
     public var detectors = [GarnishDetector]()
     
     public private(set) var addedRanges = IndexSet()
     public private(set) var removedRanges = IndexSet()
     private var _preditRanges = IndexSet()
 
-    public init(defaultAttributes: [String:Any]) {
-        
-        self.defaultAttributes = defaultAttributes
-        
-        super.init()
-
-    }
-    
-    required public init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    internal var textColor: UIColor?
+    internal var font: UIFont?
     
     func indexesNeedingLayers(in range: NSRange) -> IndexSet {
         let foundRanges = NSMutableIndexSet()
@@ -107,7 +108,11 @@ final public class GarnishTextStorage : NSTextStorage {
     
     @discardableResult
     private func detectIn(_ string: NSString, range: NSRange) -> IndexSet {
-        store.addAttributes(defaultAttributes, range: range)
+        
+        if let color = self.textColor {
+            store.addAttribute(NSForegroundColorAttributeName, value: color, range: range)
+        }
+        
         store.removeAttribute(GarnishAttributeKey, range: range)
         
         var previouslyDetectedIndexes = IndexSet()
@@ -115,22 +120,19 @@ final public class GarnishTextStorage : NSTextStorage {
         for detector in detectors {
             let detectedRanges = detector.detect(in: string as NSString).map { $0.convertedToRangeSpace(range) }
             
-            for range in detectedRanges {
+            for detectedRange in detectedRanges {
                 
-                guard let indexRange = range.toRange() else { continue }
+                guard let indexRange = detectedRange.toRange() else { continue }
                 
                 let canDetectEntityInRange = !previouslyDetectedIndexes.intersects(integersIn: indexRange)
                 
                 if canDetectEntityInRange {
                     
-                    store.addAttribute(GarnishAttributeKey, value: GarnishItem(detector.attachmentType, animatable: detector.animates), range: range)
-
-                    let highlightAttributes: [String:Any] = [
-                        NSForegroundColorAttributeName: detector.highlightColor,
-                        NSFontAttributeName: detector.highlightFont
-                    ]
+                    let item = GarnishItem(detector.attachmentType, animatable: detector.animates, highlightColor: detector.highlightColor, font: detector.highlightFont)
+                    store.addAttribute(GarnishAttributeKey, value: item, range: detectedRange)
                     
-                    store.addAttributes(highlightAttributes, range: range)
+
+                    store.addAttribute(NSForegroundColorAttributeName, value: UIColor.clear, range: detectedRange)
                     
                     previouslyDetectedIndexes.insert(integersIn: indexRange)
                 }
@@ -168,7 +170,20 @@ final public class GarnishTextStorage : NSTextStorage {
         return ranges
     }
 
-   
+    internal func highlightColor(at location: Int) -> UIColor? {
+        
+        guard let item = store.attribute(GarnishAttributeKey, at: location, effectiveRange: nil) as? GarnishItem else {
+            return nil
+        }
+        
+        return item.highlightColor
+    }
+    
+    internal func highlightFont(at location: Int) -> UIFont? {
+        let item = store.attribute(GarnishAttributeKey, at: location, effectiveRange: nil) as? GarnishItem
+        return item?.font
+    }
+    
     override public func processEditing() {
         
         let fullString = (string as NSString)
@@ -250,5 +265,10 @@ extension NSRange {
     fileprivate func countable() -> CountableRange<Int> {
         return location..<NSMaxRange(self)
     }
+    
+    fileprivate func convertedToRangeSpace(_ enclosingRange: NSRange) -> NSRange {
+        return NSRange(location: location + enclosingRange.location, length: length)
+    }
+    
 }
 

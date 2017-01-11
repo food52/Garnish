@@ -97,9 +97,10 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
         for (index, layer) in layers {
             
             layer.zPosition = 1.0
+            layer.opacity = 1.0
             
             let colorLayer = CALayer()
-            colorLayer.backgroundColor = textColor?.cgColor
+            colorLayer.backgroundColor = textColor?.cgColor ?? UIColor.black.cgColor
             colorLayer.bounds.size = layer.bounds.size
             colorLayer.anchorPoint = layer.anchorPoint
             colorLayer.position = layer.convert(layer.position, from: layer.superlayer)
@@ -117,7 +118,7 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
             
             
             let growAmount = 1.2
-            let growDuration = 0.25
+            let growDuration = 0.15
             
             let totalAnimationTime: CFTimeInterval = 0.05 * CFTimeInterval(layers.count)
             let timeBetweenAnimations = totalAnimationTime / CFTimeInterval(layers.count)
@@ -150,26 +151,17 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
             
             let colorSpring = CASpringAnimation()
             colorSpring.keyPath = "backgroundColor"
-            colorSpring.fromValue = UIColor.oilColor().cgColor
-            colorSpring.toValue = UIColor.cookieMonsterColor().cgColor
+            colorSpring.fromValue = textColor?.cgColor ?? UIColor.black.cgColor
+            colorSpring.toValue = layer.foregroundColor
             colorSpring.initialVelocity = 10
             colorSpring.stiffness = 500
             colorSpring.duration = 3.0
             colorSpring.beginTime = growBeginTime
             colorLayer.add(colorSpring, forKey: "colorSpring")
             
-            
-            let underlay = CALayer()
-            underlay.backgroundColor = UIColor.white.cgColor
-            underlay.bounds.size = layer.bounds.size
-            underlay.anchorPoint = layer.anchorPoint
-            underlay.zPosition = -1
-            underlay.position = colorLayer.position
-            
-            layer.addSublayer(underlay)
+            NSLog("\(textColor), \(layer.foregroundColor)")
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0 ) {
-                underlay.removeFromSuperlayer()
                 colorLayer.removeFromSuperlayer()
             }
         }
@@ -191,9 +183,14 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
         
         
         let text = NSMutableAttributedString(attributedString: textStorage.attributedSubstring(from: characterRange))
-        text.addAttribute(NSForegroundColorAttributeName, value: UIColor.entityHighlightColor(), range: NSRange(location: 0, length: text.length))
-        text.addAttribute(NSFontAttributeName, value: UIFont.gothamMediumWithSize(15.0), range: NSRange(location: 0, length: text.length))
+
+        if let highlightColor =  garnishTextStorage.highlightColor(at: location) {
+             text.addAttribute(NSForegroundColorAttributeName, value: highlightColor, range: NSRange(location: 0, length: text.length))
+        }
         
+        if let font =  garnishTextStorage.highlightFont(at: location) {
+            text.addAttribute(NSFontAttributeName, value: font, range: NSRange(location: 0, length: text.length))
+        }
         
         let textBoundingRect =  text.boundingRect(with: glyphRect.size, options: [.usesFontLeading], context: nil)
         
@@ -210,6 +207,7 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         
+        layer.foregroundColor = garnishTextStorage.highlightColor(at: location)?.cgColor ?? textColor?.cgColor ?? UIColor.black.cgColor
         layer.string = text
         layer.frame = layerRect
         
@@ -342,24 +340,14 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
     }
     
     
-    fileprivate func _createTextStorage() -> GarnishTextStorage {
-        
-        let defaultAttributes: [String:Any] = [
-            NSForegroundColorAttributeName: textColor ?? UIColor.black,
-            NSFontAttributeName: font ?? UIFont.preferredFont(forTextStyle: .body)
-        ]
-        
-        return GarnishTextStorage(defaultAttributes: defaultAttributes )
-    }
-    
-    
-    
     public override func awakeAfter(using aDecoder: NSCoder) -> Any? {
         
         let layoutManager = NSLayoutManager()
         
-        let textStorage = _createTextStorage()
+        let textStorage =  GarnishTextStorage()
         
+//        textStorage.font = font ??
+        textStorage.textColor = textColor ?? .black
         
         textStorage.addLayoutManager(layoutManager)
         
@@ -396,7 +384,6 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
         replacement.keyboardAppearance = keyboardAppearance
         replacement.enablesReturnKeyAutomatically = enablesReturnKeyAutomatically
         
-        
         replacement.isScrollEnabled = isScrollEnabled
         replacement.bounces = bounces
         replacement.bouncesZoom = bouncesZoom
@@ -407,6 +394,7 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
         replacement.keyboardDismissMode = keyboardDismissMode
         
         layoutManager.delegate = replacement
+        textStorage.delegate = replacement
         
         return replacement
     }
@@ -439,4 +427,18 @@ extension GarnishTextView: NSLayoutManagerDelegate /*instantiation*/ {
     
 }
 
+extension GarnishTextView: NSTextStorageDelegate {
+    public func textStorage(_ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {
+
+        let wholeStringRange = NSRange(location: 0, length: garnishTextStorage.length)
+        NSLog("\(textColor)")
+
+        for (index, layer) in layers {
+            if !NSLocationInRange(index, wholeStringRange) {
+                layer.removeFromSuperlayer()
+                layers[index] = nil
+            }
+        }
+    }
+}
 

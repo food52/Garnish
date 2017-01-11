@@ -15,7 +15,7 @@ struct Detector: GarnishDetector {
         return true
     }
   
-    var highlightFont: UIFont {
+    var highlightFont: UIFont? {
         return UIFont.preferredFont(forTextStyle: .title1)
     }
     
