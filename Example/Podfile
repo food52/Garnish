@@ -4,7 +4,7 @@ target 'Garnish_Example' do
   pod 'Garnish', :path => '../'
 
   target 'Garnish_Tests' do
-    inherit! :search_paths
+      inherit! :search_paths
 
   end
 end
